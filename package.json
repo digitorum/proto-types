@@ -1,0 +1,15 @@
+{
+  "name": "proto-types",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "parse": "node -r jiti/register ./index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^20.11.16",
+    "jiti": "^1.21.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}
