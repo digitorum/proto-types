@@ -114,7 +114,7 @@ export class SerializeMessage extends Serialize {
           break
         }
 
-        case Token.VariableType:
+        case Token.VariableTypeDefinitionStart:
         case Token.VariableRepeated: {
 
           const tokens = [td]

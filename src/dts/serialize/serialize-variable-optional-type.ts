@@ -3,6 +3,7 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 import { MutatorType } from '../enum/mutator-type'
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
+import { SerializeType } from './serialize-type'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeVariableOptionalType extends Serialize {
@@ -13,7 +14,7 @@ export class SerializeVariableOptionalType extends Serialize {
 
   public toString() {
     const name = this.find(Token.VariableName)
-    const type = this.find(Token.VariableType)
+    const type = this.flatFindBlock(Token.VariableTypeDefinitionStart, Token.VariableTypeDefinitionEnd)
     const repeated = this.find(Token.VariableRepeated)
 
     if (!name) {
@@ -23,7 +24,7 @@ export class SerializeVariableOptionalType extends Serialize {
     let result: string = this.applyMutationRule(MutatorType.VariableName, name.content)
 
     if (type) {
-      result += `?: ${this.applyMutationRule(MutatorType.VariableType, type.content)}`
+      result += `?: ${new SerializeType(type).toString()}`
     }
 
     if (repeated) {

@@ -64,6 +64,17 @@ export class TokensDataStack {
     return result
   }
 
+  protected flatFindBlock(open: Token, close: Token): TokenData[] | null {
+    const startIndex = this.tokens.findIndex((td) => td.token === open)
+    const endIndex = this.tokens.findIndex((td) => td.token === close)
+
+    if (startIndex === -1 || endIndex === -1) {
+      return null
+    }
+
+    return this.tokens.slice(startIndex, endIndex + 1)
+  }
+
   protected findFirstOf(tokens: Token[]): TokenData | null {
     const result = this.tokens.find((td) => tokens.indexOf(td.token) !== -1)
 

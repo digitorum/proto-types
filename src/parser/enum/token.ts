@@ -1,4 +1,5 @@
 export enum Token {
+  CommaSymbol,
   Comment,
   DoubleQuotedString,
   Enum,
@@ -6,7 +7,9 @@ export enum Token {
   EnumBodyStart,
   EnumName,
   EqualSymbol,
+  GtSymbol,
   Import,
+  LtSymbol,
   MessageBodyEnd,
   MessageBodyStart,
   MessageName,
@@ -22,4 +25,9 @@ export enum Token {
   VariableName,
   VariableRepeated,
   VariableType,
+  VariableTypeDefinitionEnd,
+  VariableTypeDefinitionStart,
+  VariableTypeMap,
+  VariableTypeMapKey,
+  VariableTypeMapValue,
 }

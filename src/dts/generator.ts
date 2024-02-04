@@ -54,7 +54,7 @@ export class DtsGenerator extends TokensDataStack {
           continue TICK
         }
 
-        case Token.VariableType: {
+        case Token.VariableTypeDefinitionStart: {
           result += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
           result += '\n'
           continue TICK
