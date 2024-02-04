@@ -11,7 +11,7 @@ export class TokenizeVariableType extends Tokenize {
   public apply(source: DataSource) {
     let result: TokenData[] = []
 
-    const word = source.readWord()
+    const word = source.readWhile(/[a-z\.0-9]/i)
 
     if (word === 'map') {
       result = result.concat(

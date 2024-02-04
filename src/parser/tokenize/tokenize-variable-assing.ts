@@ -3,13 +3,13 @@ import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
 import { TokenizeChar } from './tokenize-char'
 import { TokenizeEmptyCharacters } from './tokenize-empty-characters'
+import { TokenizeVariableName } from './tokenize-variable-name'
 import { TokenizeVariableValue } from './tokenize-variable-value'
-import { TokenizeWord } from './tokenize-word'
 
 export class TokenizeVariableAssing extends Tokenize {
   public apply(source: DataSource) {
     return this.applyStack(source, [
-      new TokenizeWord(Token.VariableName),
+      new TokenizeVariableName(),
       new TokenizeEmptyCharacters(),
       new TokenizeChar('=', Token.EqualSymbol),
       new TokenizeEmptyCharacters(),

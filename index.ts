@@ -22,7 +22,7 @@ Serialize.addMutationRule(MutatorType.VariableType, (value) => {
 })
 
 try {
-  const dts = new DtsGenerator(new DataSourceFile('./debug/src.proto'))
+  const dts = new DtsGenerator(new DataSourceFile('./debug/protocol.proto'))
 
   dts.generate()
 
