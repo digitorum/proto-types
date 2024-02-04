@@ -13,7 +13,13 @@ export class SerializeImport extends Serialize {
     return this.find(Token.DoubleQuotedString)?.content ?? ''
   }
 
-  public get dTsPath(): string {
+  public get dTsPath(): string | null {
+
+    // Игнорируем все внутренние типы протобафа
+    if (this.path.match(/^google\/protobuf/)) {
+      return null
+    }
+
     return this.applyMutationRule(MutatorType.ImportFilePath, this.path)
   }
 
@@ -22,6 +28,6 @@ export class SerializeImport extends Serialize {
   }
 
   public toImportString(args: string[]) {
-    return `import { ${args.join(', ')} } from '${this.dTsPath}'`
+    return `import { ${args.join(', ')} } from './${this.dTsPath}'`
   }
 }

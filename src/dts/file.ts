@@ -87,14 +87,16 @@ export class DtsFile extends TokensDataStack {
         case Token.Import: {
           const imprt = new SerializeImport(this.flatReadUntil(Token.SemicolonSymbol))
 
-          const dtsFile = new DtsFile({
-            basePath: this.basePath,
-            dataSource: new DataSourceFile(imprt.path)
-          })
+          if (imprt.dTsPath) {
+            const dtsFile = new DtsFile({
+              basePath: this.basePath,
+              dataSource: new DataSourceFile(imprt.path)
+            })
 
-          dtsFile.write(imprt.dTsPath)
+            dtsFile.write(imprt.dTsPath)
 
-          this.imports.push(imprt.toImportString([dtsFile.ns]))
+            this.imports.push(imprt.toImportString([dtsFile.ns]))
+          }
 
           continue TICK
         }
