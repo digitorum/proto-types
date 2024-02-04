@@ -4,13 +4,13 @@ import { DataSource } from '../../data-source/data-source'
 import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
 
-
 export class TokenizeComment extends Tokenize {
   public apply(source: DataSource) {
     let result: TokenData[] = []
 
     if (source.nextChars(2) == '//') {
       source.readChars(2) // Игнорируем открывание комента
+      source.readEmptyCharacters()
 
       const line = source.readLine()
 

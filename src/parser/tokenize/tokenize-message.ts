@@ -1,9 +1,10 @@
 import { DataSource } from '../../data-source/data-source'
 import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
+import { TokenizeBlockEnd } from './tokenize-block-end'
 import { TokenizeChar } from './tokenize-char'
-import { TokenizeMessageBody } from './tokenize-message-body'
 import { TokenizeEmptyCharacters } from './tokenize-empty-characters'
+import { TokenizeMessageBody } from './tokenize-message-body'
 import { TokenizeWord } from './tokenize-word'
 
 export class TokenizeMessage extends Tokenize {
@@ -16,7 +17,7 @@ export class TokenizeMessage extends Tokenize {
       new TokenizeChar('{', Token.MessageBodyStart),
       new TokenizeEmptyCharacters(),
       new TokenizeMessageBody(),
-      new TokenizeChar('}', Token.MessageBodyEnd)
+      new TokenizeBlockEnd(Token.MessageBodyEnd)
     ])
   }
 }

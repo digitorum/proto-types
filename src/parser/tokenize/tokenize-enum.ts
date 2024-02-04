@@ -1,12 +1,13 @@
 import { DataSource } from '../../data-source/data-source'
 import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
+import { TokenizeBlockEnd } from './tokenize-block-end'
 import { TokenizeChar } from './tokenize-char'
 import { TokenizeComment } from './tokenize-comment'
 import { TokenizeEmptyCharacters } from './tokenize-empty-characters'
 import { TokenizeLiteral } from './tokenize-literal'
-import { TokenizeWord } from './tokenize-word'
 import { TokenizeVariableAssing } from './tokenize-variable-assing'
+import { TokenizeWord } from './tokenize-word'
 
 export class TokenizeEnum extends Tokenize {
   public apply(source: DataSource) {
@@ -33,7 +34,7 @@ export class TokenizeEnum extends Tokenize {
       }
 
       if (source.nextChar === '}') {
-        return result.concat(new TokenizeChar('}', Token.EnumBodyEnd).apply(source))
+        return result.concat(new TokenizeBlockEnd(Token.EnumBodyEnd).apply(source))
       }
 
       result = result.concat(new TokenizeVariableAssing().apply(source))

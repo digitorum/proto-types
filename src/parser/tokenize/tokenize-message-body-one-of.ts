@@ -3,12 +3,12 @@ import type { TokenData } from './tokenize'
 import { DataSource } from '../../data-source/data-source'
 import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
+import { TokenizeBlockEnd } from './tokenize-block-end'
 import { TokenizeChar } from './tokenize-char'
 import { TokenizeComment } from './tokenize-comment'
 import { TokenizeEmptyCharacters } from './tokenize-empty-characters'
 import { TokenizeTypedVariableAssing } from './tokenize-typed-variable-assing'
 import { TokenizeWord } from './tokenize-word'
-
 
 export class TokenizeMessageBodyOneOf extends Tokenize{
   public apply(source: DataSource) {
@@ -26,7 +26,7 @@ export class TokenizeMessageBodyOneOf extends Tokenize{
 
       if(source.nextChar === '}') {
         return result.concat(
-          new TokenizeChar('}', Token.MessageOneOfBodyEnd).apply(source)
+          new TokenizeBlockEnd(Token.MessageOneOfBodyEnd).apply(source)
         )
       }
 
