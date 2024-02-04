@@ -3,7 +3,7 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
 import { SerializeComment } from './serialize-comment'
-import { SerializeVariableAssign } from './serialize-variable-assign'
+import { SerializeEnumElement } from './serialize-enum-element'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeEnum extends Serialize {
@@ -45,7 +45,7 @@ export class SerializeEnum extends Serialize {
         }
 
         case Token.VariableName: {
-          const enumValue = new SerializeVariableAssign([td].concat(this.flatReadUntil(Token.SemicolonSymbol)))
+          const enumValue = new SerializeEnumElement([td].concat(this.flatReadUntil(Token.SemicolonSymbol)))
             .toString()
 
           result += `${enumValue},\n`

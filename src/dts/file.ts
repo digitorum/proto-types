@@ -1,4 +1,6 @@
 import * as prettier from "prettier"
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { DataSource } from '../data-source/data-source'
 import { DataSourceFile } from '../data-source/data-source-file'
@@ -14,23 +16,55 @@ import { TokensDataStack } from './tokens-data-stack'
 
 export class DtsFile extends TokensDataStack {
 
-  private namespace: string = ''
+  private basePath: string
 
-  constructor(datasource: DataSource) {
+  private namespace: string
+  private imports: string[]
+  private source: string
+
+  constructor({
+    basePath = './',
+    dataSource
+  }: {
+    basePath?: string;
+    dataSource: DataSource;
+  }) {
     super()
 
-    this.tokens = new Lexer(datasource).parse()
+    this.basePath = basePath
+
+    this.imports = []
+    this.source = ''
+    this.namespace = ''
+
+    this.tokens = new Lexer(dataSource).parse()
+
+    this.perform()
   }
 
-  public async perform() {
-    let result: string = ''
+  private get formatted(): Promise<string> {
+    return prettier.format(this.source, {
+      "trailingComma": "none",
+      "singleQuote": true,
+      "parser": "typescript"
+    })
+  }
 
+  public get ns(): string {
+    return this.namespace
+  }
+
+  public async write(filePath: string) {
+    fs.writeFileSync(path.resolve(this.basePath, filePath), await this.formatted)
+  }
+
+  public perform() {
     TICK: while(this.tokens.length) {
       switch(this.tokens[0].token) {
 
         case Token.VariableName: {
-          result += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
-          result += '\n'
+          this.source += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          this.source += '\n'
           continue TICK
         }
   
@@ -39,54 +73,55 @@ export class DtsFile extends TokensDataStack {
 
           this.namespace = pckg.namespace
 
-          result += pckg.toString()
-          result += '\n'
+          this.source += pckg.toString()
+          this.source += '\n'
           continue TICK
         }
 
         case Token.VariableTypeDefinitionStart: {
-          result += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
-          result += '\n'
+          this.source += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          this.source += '\n'
           continue TICK
         }
 
         case Token.Import: {
           const imprt = new SerializeImport(this.flatReadUntil(Token.SemicolonSymbol))
 
-          result += imprt.toString()
-          result += '\n'
+          const dtsFile = new DtsFile({
+            basePath: this.basePath,
+            dataSource: new DataSourceFile(imprt.path)
+          })
 
-          const dtsFile = new DtsFile(new DataSourceFile(imprt.path))
-          const source = await dtsFile.perform()
+          dtsFile.write(imprt.dTsPath)
 
-          // console.log(source)
+          this.imports.push(imprt.toImportString([dtsFile.ns]))
 
           continue TICK
         }
 
         case Token.Comment: {
-          result += new SerializeComment(this.flatReadUntil(Token.Comment)).toString()
-          result += '\n'
+          this.source += new SerializeComment(this.flatReadUntil(Token.Comment)).toString()
+          this.source += '\n'
           continue TICK
         }
 
         case Token.MultilineComment: {
-          result += new SerializeComment(this.flatReadUntil(Token.MultilineComment)).toString()
-          result += '\n'
+          this.source += new SerializeComment(this.flatReadUntil(Token.MultilineComment)).toString()
+          this.source += '\n'
           continue TICK
         }
 
         case Token.MessageStart: {
           const message = new SerializeMessage(this.blockRead(Token.MessageStart, Token.MessageBodyEnd))
 
-          result += message.toString()
-          result += '\n'
+          this.source += message.toString()
+          this.source += '\n'
           continue TICK
         }
 
         case Token.Enum: {
-          result += new SerializeEnum(this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
-          result += '\n'
+          this.source += new SerializeEnum(this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
+          this.source += '\n'
           continue TICK
         }
 
@@ -96,13 +131,16 @@ export class DtsFile extends TokensDataStack {
       }
     }
 
-    result = `export namespace ${this.namespace} { ${result} }`
+    const importsTmpl = this.imports
+      .join('\n')
 
-    return await prettier.format(result, {
-      "trailingComma": "none",
-      "singleQuote": true,
-      "parser": "typescript"
-    })
+    this.source = `
+
+    ${importsTmpl}
+
+    export namespace ${this.namespace} { ${this.source} }
+
+    `
   }
 
 }

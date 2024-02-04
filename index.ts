@@ -4,6 +4,27 @@ import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
 
 import camelCase from 'lodash.camelcase'
+import path from 'node:path'
+
+function getNamespaceName(src: string | string[]) {
+  let chunks: string[] = []
+
+  if (Array.isArray(src)) {
+    chunks = src
+  } else {
+    chunks = src
+      .replace(/^common./, '')
+      .split('.')
+  }
+
+  return camelCase(
+    chunks
+      .filter((node) => node !== 'common')
+      .join('_')
+  ).replace(/^(.)(.*)$/, ($0, $1, $2) => {
+    return `${$1.toUpperCase()}${$2}`
+  })
+}
 
 Serialize.addMutationRule(MutatorType.VariableName, (value) => {
   return camelCase(value)
@@ -18,28 +39,45 @@ Serialize.addMutationRule(MutatorType.VariableType, (value) => {
     uint32: 'number'
   }
 
-  return map[value] ?? value
+  if (map[value]) {
+    return map[value]
+  }
+
+  if (value.match('.')) {
+    const chunks = value
+      .split('.')
+
+    if (chunks.length > 1) {
+      const type = chunks.pop()
+      const ns = getNamespaceName(chunks)
+
+      return `${ns}.${type}`
+    }
+
+  }
+
+  return value
 })
 
 Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value) => {
-  return camelCase(
-    value
-      .replace(/^common./, '')
-      .split('.')
-      .join('_')
-  ).replace(/^(.)(.*)$/, ($0, $1, $2) => {
-    return `${$1.toUpperCase()}${$2}`
-  })
+  return getNamespaceName(value)
+})
+
+Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
+  return value
+    .replace(/\//, '_')
+    .replace(/\.proto$/, '.d.ts')
+
+  //return `__${crypto.createHash('sha256').update(value, 'utf8').digest('hex')}.d.ts`
 })
 
 try {
-  const dts = new DtsFile(new DataSourceFile('./debug/src.proto'))
-
-  dts.perform().then((data) => {
-    console.log(data)
+  const dts = new DtsFile({
+    basePath: path.resolve(__dirname, './debug/'),
+    dataSource: new DataSourceFile('./debug/src.proto')
   })
 
-
+  dts.write('src.d.ts')
 } catch (e) {
   console.log(e)
 }

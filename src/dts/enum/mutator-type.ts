@@ -1,5 +1,6 @@
 export enum MutatorType {
   VariableName,
   VariableType,
-  PackageNameToNamespace
+  PackageNameToNamespace,
+  ImportFilePath
 }
