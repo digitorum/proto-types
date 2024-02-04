@@ -8,7 +8,11 @@ export class SerializeImport extends Serialize {
     super(tokens)
   }
 
+  public get path(): string {
+    return this.find(Token.DoubleQuotedString)?.content ?? ''
+  }
+
   public toString() {
-    return `// ${this.find(Token.Import)?.content} "${this.find(Token.DoubleQuotedString)?.content}"`
+    return `// ${this.find(Token.Import)?.content} "${this.path}"`
   }
 }

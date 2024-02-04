@@ -20,6 +20,12 @@ export class SerializeMessage extends Serialize {
     super(tokens)
 
     this.parsed = []
+
+    this.fill()
+  }
+
+  public get messages() {
+    return this.parsed.map((node) => node.resultName)
   }
 
   private setParsedChunk(
@@ -60,7 +66,7 @@ export class SerializeMessage extends Serialize {
       .sort((a, b) => a.scope.length - b.scope.length)[0]?.resultName ?? null
   }
 
-  private runMessageFill(scope: string[] = []) {
+  private fill(scope: string[] = []) {
     let result: string = ''
     let isMessaheStartMatched = false
     let isOneOfBlockStarted = false
@@ -95,7 +101,7 @@ export class SerializeMessage extends Serialize {
           if (isMessaheStartMatched) {
             // уводим на второй виток перед этим вернув токен на место.
             this.tokens.unshift(td)
-            this.runMessageFill([...scope, sourceInterfaceName])
+            this.fill([...scope, sourceInterfaceName])
           } else {
             isMessaheStartMatched = true
             result += 'export interface '
@@ -163,7 +169,6 @@ export class SerializeMessage extends Serialize {
   }
 
   public toString() {
-    this.runMessageFill()
     return this.parsed
       .map((chunk) => chunk.type).join('\n')
   }

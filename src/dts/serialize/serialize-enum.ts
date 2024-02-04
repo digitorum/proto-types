@@ -22,8 +22,9 @@ export class SerializeEnum extends Serialize {
       }
 
       switch(td.token) {
+
         case Token.Enum: {
-          result += 'enum '
+          result += 'export enum '
           break
         }
 

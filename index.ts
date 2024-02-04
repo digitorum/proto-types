@@ -1,5 +1,5 @@
 import { DataSourceFile } from './src/data-source/data-source-file'
-import { DtsGenerator } from './src/dts/generator'
+import { DtsFile } from './src/dts/file'
 import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
 
@@ -21,10 +21,24 @@ Serialize.addMutationRule(MutatorType.VariableType, (value) => {
   return map[value] ?? value
 })
 
-try {
-  const dts = new DtsGenerator(new DataSourceFile('./debug/protocol.proto'))
+Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value) => {
+  return camelCase(
+    value
+      .replace(/^common./, '')
+      .split('.')
+      .join('_')
+  ).replace(/^(.)(.*)$/, ($0, $1, $2) => {
+    return `${$1.toUpperCase()}${$2}`
+  })
+})
 
-  dts.generate()
+try {
+  const dts = new DtsFile(new DataSourceFile('./debug/src.proto'))
+
+  dts.perform().then((data) => {
+    console.log(data)
+  })
+
 
 } catch (e) {
   console.log(e)

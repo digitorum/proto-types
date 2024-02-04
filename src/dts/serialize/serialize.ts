@@ -11,6 +11,7 @@ export abstract class Serialize extends TokensDataStack {
   }
 
   static mutators: Record<MutatorType, MutationActions[]> = {
+    [MutatorType.PackageNameToNamespace]: [],
     [MutatorType.VariableName]: [],
     [MutatorType.VariableType]: []
   }
