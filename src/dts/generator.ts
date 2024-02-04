@@ -1,7 +1,10 @@
-import type { TokenData } from '../parser/tokenize/tokenize'
+import * as prettier from "prettier"
+import camelCase from 'lodash.camelcase'
 
 import { DataSource } from '../data-source/data-source'
 import { Lexer } from '../parser/lexer'
+import { MutatorType } from './enum/mutator-type'
+import { Serialize } from './serialize/serialize'
 import { SerializeComment } from './serialize/serialize-comment'
 import { SerializeEnum } from './serialize/serialize-enum'
 import { SerializeGlobalVar } from './serialize/serialize-global-var'
@@ -11,7 +14,19 @@ import { SerializePackage } from './serialize/serialize-package'
 import { Token } from '../parser/enum/token'
 import { TokensDataStack } from './tokens-data-stack'
 
-import * as prettier from "prettier"
+Serialize.addMutationRule(MutatorType.VariableName, (value) => {
+  return camelCase(value)
+})
+
+Serialize.addMutationRule(MutatorType.VariableType, (value) => {
+  const map: Record<string, string> = {
+    bool: 'boolean',
+    uint32: 'number',
+    'google.protobuf.Timestamp': 'string'
+  }
+
+  return map[value] ?? value
+})
 
 export class DtsGenerator extends TokensDataStack {
 

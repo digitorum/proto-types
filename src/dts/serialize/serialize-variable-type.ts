@@ -1,5 +1,6 @@
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
+import { MutatorType } from '../enum/mutator-type'
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
@@ -8,10 +9,6 @@ export class SerializeVariableType extends Serialize {
 
   constructor(tokens: TokenData[]) {
     super(tokens)
-  }
-
-  public addVariableTypeMutationRule() {
-    return this
   }
 
   public toString() {
@@ -23,10 +20,10 @@ export class SerializeVariableType extends Serialize {
       throw new NoTokenFound()
     }
 
-    let result: string = name?.content ?? ''
+    let result: string = this.applyMutationRule(MutatorType.VariableName, name.content)
 
     if (type) {
-      result += `: ${type.content}`
+      result += `: ${this.applyMutationRule(MutatorType.VariableType, type.content)}`
     }
 
     if (repeated) {

@@ -3,10 +3,12 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
 import { SerializeComment } from './serialize-comment'
+import { SerializeVariableOptionalType } from './serialize-variable-optional-type'
 import { SerializeVariableType } from './serialize-variable-type'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeMessage extends Serialize {
+
   private parsed: {
     type: string;
     sourceName: string;
@@ -61,6 +63,7 @@ export class SerializeMessage extends Serialize {
   private runMessageFill(scope: string[] = []) {
     let result: string = ''
     let isMessaheStartMatched = false
+    let isOneOfBlockStarted = false
     let sourceInterfaceName = ''
     let resultIntarfaceName = ''
 
@@ -72,6 +75,16 @@ export class SerializeMessage extends Serialize {
       }
 
       switch(td.token) {
+        case Token.MessageOneOfBodyStart: {
+          isOneOfBlockStarted = true
+          break
+        }
+
+        case Token.MessageOneOfBodyEnd: {
+          isOneOfBlockStarted = false
+          break
+        }
+
         case Token.Comment: {
           result += `${new SerializeComment([td]).toString()}`
           break
@@ -84,7 +97,7 @@ export class SerializeMessage extends Serialize {
             this.runMessageFill([...scope, sourceInterfaceName])
           } else {
             isMessaheStartMatched = true
-            result += 'interface '
+            result += 'export interface '
           }
           break
         }
@@ -122,10 +135,15 @@ export class SerializeMessage extends Serialize {
               return tokenData
             })
 
-          const variable = new SerializeVariableType(tokens)
-            .toString()
+          let typeDefinition: Serialize
 
-          result += `${variable};\n`
+          if (isOneOfBlockStarted) {
+            typeDefinition = new SerializeVariableOptionalType(tokens)
+          } else {
+            typeDefinition = new SerializeVariableType(tokens)
+          }
+
+          result += `${typeDefinition.toString()};\n`
           break;
         }
 
