@@ -35,6 +35,11 @@ export class TokenizeMessageBodyOneOf extends Tokenize{
         continue TICK
       }
 
+      if (source.nextChars(3) === '/**') {
+        result = result.concat(new TokenizeComment().apply(source))
+        continue TICK
+      }
+
       if(source.nextChar !== '}') {
         result = result.concat(new TokenizeTypedVariableAssing().apply(source))
         continue TICK

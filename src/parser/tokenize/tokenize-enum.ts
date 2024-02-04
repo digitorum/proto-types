@@ -27,6 +27,11 @@ export class TokenizeEnum extends Tokenize {
         continue TICK
       }
 
+      if (source.nextChars(3) === '/**') {
+        result = result.concat(new TokenizeComment().apply(source))
+        continue TICK
+      }
+
       if (source.nextChar === '}') {
         return result.concat(new TokenizeChar('}', Token.EnumBodyEnd).apply(source))
       }

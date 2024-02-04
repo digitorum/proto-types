@@ -10,6 +10,7 @@ export abstract class DataSource {
   public abstract get oef(): boolean;
   public abstract nextChars(count: number): string;
   public abstract readChar(): string;
+  public abstract readChars(count: number): string;
   public abstract readWhile(matches: string[] | RegExp): string;
   public abstract readWhileNot(matches: string[]): string;
 

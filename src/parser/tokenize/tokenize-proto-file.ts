@@ -24,17 +24,22 @@ export class TokenizeProtoFile extends Tokenize {
         return result
       }
 
-      if (source.nextChars(2) === "//") {
+      if (source.nextChars(2) === '//') {
         result = result.concat(new TokenizeComment().apply(source))
         continue TICK
       }
 
-      if (source.nextChars(6) === "syntax") {
+      if (source.nextChars(3) === '/**') {
+        result = result.concat(new TokenizeComment().apply(source))
+        continue TICK
+      }
+
+      if (source.nextChars(6) === 'syntax') {
         result = result.concat(new TokenizeVariableAssing().apply(source))
         continue TICK
       }
 
-      if (source.nextChars(6) === "option") {
+      if (source.nextChars(6) === 'option') {
         result = result.concat(new TokenizeTypedVariableAssing().apply(source))
         continue TICK
       }

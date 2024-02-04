@@ -8,16 +8,38 @@ import { Tokenize } from './tokenize'
 export class TokenizeComment extends Tokenize {
   public apply(source: DataSource) {
     let result: TokenData[] = []
-  
-    while(source.nextChars(2) == '//') {
-      // Игнорируем открывание комента
-      source.readWhile(['/', ' '])
+
+    if (source.nextChars(2) == '//') {
+      source.readChars(2) // Игнорируем открывание комента
 
       const line = source.readLine()
 
       result.push({
         token: Token.Comment,
         content: line
+      })
+    }
+
+    if (source.nextChars(3) === '/**') {
+      source.readChars(3)
+
+      let completed = false
+      let comment = ''
+
+      while(!completed) {
+        const chr = source.readChar()
+
+        if (chr === '*' && source.nextChar === '/') {
+          source.readChar()
+          completed = true
+        } else {
+          comment += chr
+        }
+      }
+
+      result.push({
+        token: Token.MultilineComment,
+        content: comment
       })
     }
 

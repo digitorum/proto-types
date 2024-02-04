@@ -9,6 +9,18 @@ export class SerializeComment extends Serialize {
   }
 
   public toString() {
-    return `// ${this.find(Token.Comment)?.content}\n`
+    return this.tokens
+      .map((td) => {
+        if (td.token === Token.Comment) {
+          return `// ${td.content}`
+        }
+
+        if (td.token === Token.MultilineComment) {
+          return `/** ${td.content} */`
+        }
+
+        return ''
+      })
+      .join('\n')
   }
 }

@@ -29,6 +29,10 @@ export class DataSourceFile extends DataSource {
     return this.source.shift() ?? ''
   }
 
+  public readChars(count: number): string {
+    return this.source.splice(0, count).join('')
+  }
+
   public readWhile(matches: string[] | RegExp): string {
     let result: string = ''
 

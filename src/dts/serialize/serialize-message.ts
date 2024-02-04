@@ -85,8 +85,9 @@ export class SerializeMessage extends Serialize {
           break
         }
 
-        case Token.Comment: {
-          result += `${new SerializeComment([td]).toString()}`
+        case Token.Comment:
+        case Token.MultilineComment: {
+          result += `${new SerializeComment([td]).toString()}\n`
           break
         }
 

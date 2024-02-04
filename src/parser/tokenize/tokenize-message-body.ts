@@ -25,6 +25,11 @@ export class TokenizeMessageBody extends Tokenize {
         continue TICK
       }
 
+      if (source.nextChars(3) === '/**') {
+        result = result.concat(new TokenizeComment().apply(source))
+        continue TICK
+      }
+
       if (source.nextChars(7) === 'message') {
         result = result.concat(new TokenizeMessage().apply(source))
         continue TICK
