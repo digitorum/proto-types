@@ -96,7 +96,7 @@ export class DtsFile extends TokensDataStack {
 
             dtsFile.write(imprt.dTsPath)
 
-            this.imports.push(imprt.toImportString([dtsFile.ns]))
+            // this.imports.push(imprt.toImportString([dtsFile.ns]))
           }
 
           continue TICK
@@ -147,7 +147,7 @@ export class DtsFile extends TokensDataStack {
 
     ${importsTmpl}
 
-    export namespace ${this.namespace} { ${this.source} }
+    namespace ${this.namespace} { ${this.source} }
 
     `
   }

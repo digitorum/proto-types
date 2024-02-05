@@ -32,6 +32,7 @@ Serialize.addMutationRule(MutatorType.VariableName, (value) => {
 
 Serialize.addMutationRule(MutatorType.VariableType, (value) => {
   const map: Record<string, string> = {
+    'google.protobuf.Empty': 'any',
     'google.protobuf.Timestamp': 'string',
     bool: 'boolean',
     bytes: 'string',

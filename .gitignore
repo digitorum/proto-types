@@ -1,3 +1,4 @@
 node_modules/
 proto/
 types/
+test.ts
