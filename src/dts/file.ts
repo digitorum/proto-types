@@ -1,3 +1,6 @@
+import type { SerializeContext, SerializeConstructor } from './serialize/serialize'
+import type { TokenData } from '../parser/tokenize/tokenize'
+
 import * as prettier from "prettier"
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,6 +23,7 @@ export class DtsFile extends TokensDataStack {
   private basePath: string
 
   private namespace: string
+  private package: string;
   private imports: string[]
   private source: string
 
@@ -37,10 +41,25 @@ export class DtsFile extends TokensDataStack {
     this.imports = []
     this.source = ''
     this.namespace = ''
+    this.package = ''
 
     this.tokens = new Lexer(dataSource).parse()
 
     this.perform()
+  }
+
+  private get context(): SerializeContext {
+    return {
+      namespace: this.namespace,
+      package: this.package
+    }
+  }
+
+  private getSerializerInstance<T extends SerializeConstructor>(
+    ctor: T,
+    tokens: TokenData[]
+  ) {
+    return new ctor(tokens, this.context) as InstanceType<T>
   }
 
   private get formatted(): Promise<string> {
@@ -64,15 +83,16 @@ export class DtsFile extends TokensDataStack {
       switch(this.tokens[0].token) {
 
         case Token.VariableName: {
-          this.source += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          this.source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
           this.source += '\n'
           continue TICK
         }
   
         case Token.Package: {
-          const pckg = new SerializePackage(this.flatReadUntil(Token.SemicolonSymbol))
+          const pckg = this.getSerializerInstance(SerializePackage, this.flatReadUntil(Token.SemicolonSymbol))
 
           this.namespace = pckg.namespace
+          this.package = pckg.name
 
           this.source += pckg.toString()
           this.source += '\n'
@@ -80,13 +100,13 @@ export class DtsFile extends TokensDataStack {
         }
 
         case Token.VariableTypeDefinitionStart: {
-          this.source += new SerializeGlobalVar(this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          this.source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
           this.source += '\n'
           continue TICK
         }
 
         case Token.Import: {
-          const imprt = new SerializeImport(this.flatReadUntil(Token.SemicolonSymbol))
+          const imprt = this.getSerializerInstance(SerializeImport, this.flatReadUntil(Token.SemicolonSymbol))
 
           if (imprt.dTsPath) {
             const dtsFile = new DtsFile({
@@ -103,19 +123,19 @@ export class DtsFile extends TokensDataStack {
         }
 
         case Token.Comment: {
-          this.source += new SerializeComment(this.flatReadUntil(Token.Comment)).toString()
+          this.source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.Comment)).toString()
           this.source += '\n'
           continue TICK
         }
 
         case Token.MultilineComment: {
-          this.source += new SerializeComment(this.flatReadUntil(Token.MultilineComment)).toString()
+          this.source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.MultilineComment)).toString()
           this.source += '\n'
           continue TICK
         }
 
         case Token.MessageStart: {
-          const message = new SerializeMessage(this.blockRead(Token.MessageStart, Token.MessageBodyEnd))
+          const message = this.getSerializerInstance(SerializeMessage, this.blockRead(Token.MessageStart, Token.MessageBodyEnd))
 
           this.source += message.toString()
           this.source += '\n'
@@ -123,13 +143,13 @@ export class DtsFile extends TokensDataStack {
         }
 
         case Token.Enum: {
-          this.source += new SerializeEnum(this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
+          this.source += this.getSerializerInstance(SerializeEnum, this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
           this.source += '\n'
           continue TICK
         }
 
         case Token.ServiceDefinitionStart: {
-          this.source += new SerializeService(this.flatReadUntil(Token.ServiceDefinitionEnd)).toString()
+          this.source += this.getSerializerInstance(SerializeService, this.flatReadUntil(Token.ServiceDefinitionEnd)).toString()
           this.source += '\n'
           continue TICK
         }

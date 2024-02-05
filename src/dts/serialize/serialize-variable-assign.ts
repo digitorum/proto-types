@@ -1,3 +1,4 @@
+import type { SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { MutatorType } from '../enum/mutator-type'
@@ -8,8 +9,8 @@ import { SerializeValue } from './serialize-value'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeVariableAssign extends Serialize {
-  constructor(tokens: TokenData[]) {
-    super(tokens)
+  constructor(tokens: TokenData[], context: SerializeContext) {
+    super(tokens, context)
   }
 
   public toString() {
@@ -25,7 +26,7 @@ export class SerializeVariableAssign extends Serialize {
     let result: string = this.applyMutationRule(MutatorType.VariableName, name.content)
 
     if (type) {
-      result += `: ${new SerializeType(type).toString()}`
+      result += `: ${this.instance(SerializeType, type).toString()}`
     }
 
     if (repeated) {
@@ -33,7 +34,7 @@ export class SerializeVariableAssign extends Serialize {
     }
 
     if (value) {
-      result += ' = ' + new SerializeValue([value]).toString()
+      result += ' = ' + this.instance(SerializeValue, [value]).toString()
     }
 
     return result

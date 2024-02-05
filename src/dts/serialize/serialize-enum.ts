@@ -1,3 +1,4 @@
+import type { SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { NoTokenFound } from '../error/no-token-found'
@@ -7,8 +8,8 @@ import { SerializeEnumElement } from './serialize-enum-element'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeEnum extends Serialize {
-  constructor(tokens: TokenData[]) {
-    super(tokens)
+  constructor(tokens: TokenData[], context: SerializeContext) {
+    super(tokens, context)
   }
 
   public toString() {
@@ -40,12 +41,12 @@ export class SerializeEnum extends Serialize {
 
         case Token.Comment:
         case Token.MultilineComment: {
-          result += `${new SerializeComment([td]).toString()}\n`
+          result += `${this.instance(SerializeComment, [td]).toString()}\n`
           break
         }
 
         case Token.VariableName: {
-          const enumValue = new SerializeEnumElement([td].concat(this.flatReadUntil(Token.SemicolonSymbol)))
+          const enumValue = this.instance(SerializeEnumElement, [td].concat(this.flatReadUntil(Token.SemicolonSymbol)))
             .toString()
 
           result += `${enumValue},\n`

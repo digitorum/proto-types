@@ -1,3 +1,4 @@
+import type { SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { NoTokenFound } from '../error/no-token-found'
@@ -16,8 +17,8 @@ export class SerializeMessage extends Serialize {
     scope: string[]
   }[]
 
-  constructor(tokens: TokenData[]) {
-    super(tokens)
+  constructor(tokens: TokenData[], context: SerializeContext) {
+    super(tokens, context)
 
     this.parsed = []
 
@@ -93,7 +94,7 @@ export class SerializeMessage extends Serialize {
 
         case Token.Comment:
         case Token.MultilineComment: {
-          result += `${new SerializeComment([td]).toString()}\n`
+          result += `${this.instance(SerializeComment, [td]).toString()}\n`
           break
         }
 
@@ -145,9 +146,9 @@ export class SerializeMessage extends Serialize {
           let typeDefinition: Serialize
 
           if (isOneOfBlockStarted) {
-            typeDefinition = new SerializeVariableOptionalType(tokens)
+            typeDefinition = this.instance(SerializeVariableOptionalType, tokens)
           } else {
-            typeDefinition = new SerializeVariableType(tokens)
+            typeDefinition = this.instance(SerializeVariableType, tokens)
           }
 
           result += `${typeDefinition.toString()};\n`

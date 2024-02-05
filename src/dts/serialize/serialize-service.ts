@@ -1,3 +1,4 @@
+import type { SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { Serialize } from './serialize'
@@ -6,8 +7,8 @@ import { SerializeServiceRpc } from './serialize-service-rpc'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeService extends Serialize {
-  constructor(tokens: TokenData[]) {
-    super(tokens)
+  constructor(tokens: TokenData[], context: SerializeContext) {
+    super(tokens, context)
   }
 
   public toString(): string {
@@ -25,16 +26,14 @@ export class SerializeService extends Serialize {
 
         case Token.RpcDefinitionStart: {
           result.push(
-            new SerializeServiceRpc(
-              [td].concat(this.flatReadUntil(Token.RpcDefinitionEnd))
-            ).toString()
+            this.instance(SerializeServiceRpc, [td].concat(this.flatReadUntil(Token.RpcDefinitionEnd))).toString()
           )
           continue TICK
         }
 
         case Token.Comment:
         case Token.MultilineComment: {
-          result.push(new SerializeComment([td]).toString())
+          result.push(this.instance(SerializeComment, [td]).toString())
           continue TICK
         }
 

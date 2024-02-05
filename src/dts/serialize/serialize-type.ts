@@ -1,3 +1,4 @@
+import type { SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { MutatorType } from '../enum/mutator-type'
@@ -6,8 +7,8 @@ import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeType extends Serialize {
-  constructor(tokens: TokenData[]) {
-    super(tokens)
+  constructor(tokens: TokenData[], context: SerializeContext) {
+    super(tokens, context)
   }
 
   public toString() {

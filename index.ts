@@ -1,3 +1,5 @@
+import type { SerializeContext } from './src/dts/serialize/serialize'
+
 import { DataSourceFile } from './src/data-source/data-source-file'
 import { DtsFile } from './src/dts/file'
 import { MutatorType } from './src/dts/enum/mutator-type'
@@ -6,16 +8,17 @@ import { Serialize } from './src/dts/serialize/serialize'
 import camelCase from 'lodash.camelcase'
 import path from 'node:path'
 
-function getNamespaceName(src: string | string[]) {
-  let chunks: string[] = []
+function getNamespaceName(src: string, context: SerializeContext) {
 
-  if (Array.isArray(src)) {
-    chunks = src
-  } else {
-    chunks = src
-      .replace(/^common./, '')
-      .split('.')
-  }
+  const commonRe = /^common./
+
+  let chunks: string[] = (
+      commonRe.test(src)
+        ? src // передан абсолютный путь
+        : `${context.package}.${src}` // передан относительный путь
+    )
+    .replace(commonRe, '')
+    .split('.')
 
   return camelCase(
     chunks
@@ -30,7 +33,7 @@ Serialize.addMutationRule(MutatorType.VariableName, (value) => {
   return camelCase(value)
 })
 
-Serialize.addMutationRule(MutatorType.VariableType, (value) => {
+Serialize.addMutationRule(MutatorType.VariableType, (value, context) => {
   const map: Record<string, string> = {
     'google.protobuf.Empty': 'any',
     'google.protobuf.Timestamp': 'string',
@@ -45,12 +48,11 @@ Serialize.addMutationRule(MutatorType.VariableType, (value) => {
   }
 
   if (value.match('.')) {
-    const chunks = value
-      .split('.')
+    const chunks = value.split('.')
 
     if (chunks.length > 1) {
       const type = chunks.pop()
-      const ns = getNamespaceName(chunks)
+      const ns = getNamespaceName(chunks.join('.'), context)
 
       return `${ns}.${type}`
     }
@@ -60,8 +62,8 @@ Serialize.addMutationRule(MutatorType.VariableType, (value) => {
   return value
 })
 
-Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value) => {
-  return getNamespaceName(value)
+Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value, context) => {
+  return getNamespaceName(value, context)
 })
 
 Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {

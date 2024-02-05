@@ -3,10 +3,23 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 import { MutatorType } from '../enum/mutator-type'
 import { TokensDataStack } from '../tokens-data-stack'
 
-type MutationActions = (content: string) => string
+type MutationActions = (content: string, context: SerializeContext) => string
+
+export type SerializeConstructor = {
+  new (tokens: TokenData[], context: SerializeContext): Serialize
+}
+
+export type SerializeContext = {
+  namespace: string
+  package: string;
+}
+
 export abstract class Serialize extends TokensDataStack {
 
-  constructor(tokens: TokenData[]) {
+  constructor(
+    tokens: TokenData[],
+    private context: SerializeContext
+  ) {
     super(tokens)
   }
 
@@ -27,8 +40,12 @@ export abstract class Serialize extends TokensDataStack {
     }
 
     return Serialize.mutators[type]
-      .reduce<string>((acc, fn) => fn(acc), value)
+      .reduce<string>((acc, fn) => fn(acc, this.context), value)
 
+  }
+
+  public instance(ctor: SerializeConstructor, tokens: TokenData[]) {
+    return new ctor(tokens, this.context)
   }
 
   public abstract toString(): string;
