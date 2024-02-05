@@ -65,19 +65,17 @@ Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value) => {
 
 Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
   return value
-    .replace(/\//, '_')
+    .replace(/\//g, '_')
     .replace(/\.proto$/, '.d.ts')
-
-  //return `__${crypto.createHash('sha256').update(value, 'utf8').digest('hex')}.d.ts`
 })
 
 try {
   const dts = new DtsFile({
-    basePath: path.resolve(__dirname, './debug/'),
-    dataSource: new DataSourceFile('./debug/src.proto')
+    basePath: path.resolve(__dirname, './types/'),
+    dataSource: new DataSourceFile('./proto/service/auth/external.proto')
   })
 
-  dts.write('src.d.ts')
+  dts.write('auth_external.d.ts')
 } catch (e) {
   console.log(e)
 }

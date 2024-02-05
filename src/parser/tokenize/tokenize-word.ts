@@ -5,7 +5,8 @@ import { Tokenize } from './tokenize'
 
 export class TokenizeWord extends Tokenize {
   constructor(
-    private asToken: Token
+    private asToken: Token,
+    private pattern: string | null = null
   ) {
     super()
   }
@@ -14,7 +15,11 @@ export class TokenizeWord extends Tokenize {
     const word = source.readWord()
 
     if (!word) {
-      throw new SyntaxError() 
+      throw new SyntaxError()
+    }
+
+    if (this.pattern && word !== this.pattern) {
+      throw new SyntaxError()
     }
 
     return [

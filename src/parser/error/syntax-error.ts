@@ -1,7 +1,7 @@
 export class SyntaxError extends Error {
-  constructor() {
+  constructor(message: string = 'Syntax error') {
     super()
 
-    this.message = 'Syntax error'
+    this.message = message
   }
 }

@@ -11,6 +11,7 @@ import { SerializeGlobalVar } from './serialize/serialize-global-var'
 import { SerializeImport } from './serialize/serialize-import'
 import { SerializeMessage } from './serialize/serialize-message'
 import { SerializePackage } from './serialize/serialize-package'
+import { SerializeService } from './serialize/serialize-service'
 import { Token } from '../parser/enum/token'
 import { TokensDataStack } from './tokens-data-stack'
 
@@ -123,6 +124,12 @@ export class DtsFile extends TokensDataStack {
 
         case Token.Enum: {
           this.source += new SerializeEnum(this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
+          this.source += '\n'
+          continue TICK
+        }
+
+        case Token.ServiceDefinitionStart: {
+          this.source += new SerializeService(this.flatReadUntil(Token.ServiceDefinitionEnd)).toString()
           this.source += '\n'
           continue TICK
         }

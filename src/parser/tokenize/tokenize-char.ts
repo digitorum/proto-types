@@ -15,7 +15,7 @@ export class TokenizeChar extends Tokenize {
     const char = source.readChar()
 
     if (char !== this.char) {
-      throw new SyntaxError()
+      throw new SyntaxError(`Expect char "${this.char}" but received "${char}"`)
     }
 
     return [

@@ -16,7 +16,7 @@ export class SerializeImport extends Serialize {
   public get dTsPath(): string | null {
 
     // Игнорируем все внутренние типы протобафа
-    if (this.path.match(/^google\/protobuf/)) {
+    if (this.path.match(/^google\/(protobuf|api)/)) {
       return null
     }
 

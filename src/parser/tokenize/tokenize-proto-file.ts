@@ -7,6 +7,7 @@ import { TokenizeEnum } from './tokenize-enum'
 import { TokenizeImport } from './tokenize-import'
 import { TokenizeMessage } from './tokenize-message'
 import { TokenizePackageName } from './tokenize-package-name'
+import { TokenizeService } from './tokenize-service'
 import { TokenizeTypedVariableAssing } from './tokenize-typed-variable-assing'
 import { TokenizeVariableAssing } from './tokenize-variable-assing'
 import { UnexpectedCaseError } from '../error/unexpected-case-error'
@@ -61,6 +62,11 @@ export class TokenizeProtoFile extends Tokenize {
 
       if (source.nextChars(4) === 'enum') {
         result = result.concat(new TokenizeEnum().apply(source))
+        continue TICK
+      }
+
+      if (source.nextChars(7) === 'service') {
+        result = result.concat(new TokenizeService().apply(source))
         continue TICK
       }
 

@@ -1,7 +1,8 @@
-import { TokenData } from './tokenize'
 import { DataSource } from '../../data-source/data-source'
-import { Tokenize } from './tokenize'
+import { SyntaxError } from '../error/syntax-error'
 import { Token } from '../../parser/enum/token'
+import { TokenData } from './tokenize'
+import { Tokenize } from './tokenize'
 
 export class TokenizeBlockEnd extends Tokenize {
   constructor(
@@ -13,12 +14,16 @@ export class TokenizeBlockEnd extends Tokenize {
   public apply(source: DataSource) {
     let result: TokenData[] = []
 
-    if (source.nextChar === '}') {
-      result.push({
-        token: this.asToken,
-        content: source.readChar()
-      })
+    const char = source.readChar()
+
+    if (char !== '}') {
+      throw new SyntaxError()
     }
+
+    result.push({
+      token: this.asToken,
+      content: char
+    })
 
     source.readEmptyCharacters()
 
