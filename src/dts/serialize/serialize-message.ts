@@ -4,6 +4,7 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
 import { SerializeComment } from './serialize-comment'
+import { SerializeEnum } from './serialize-enum'
 import { SerializeVariableOptionalType } from './serialize-variable-optional-type'
 import { SerializeVariableType } from './serialize-variable-type'
 import { Token } from '../../parser/enum/token'
@@ -119,6 +120,35 @@ export class SerializeMessage extends Serialize {
 
         case Token.MessageBodyStart: {
           result += ' {\n'
+          break
+        }
+
+        case Token.Enum: {
+          let sourceEnumName = this.find(Token.EnumName)?.content ?? ''
+          let resultEnumName =  [...scope, sourceEnumName].join('__')
+
+          const enumTokens = [td]
+            .concat(this.flatReadUntil(Token.EnumBodyEnd))
+            .map((td) => {
+              if (td.token === Token.EnumName) {
+                return {
+                  token: td.token,
+                  content: resultEnumName
+                }
+              }
+
+              return td
+            })
+
+          const type = this.instance(SerializeEnum, enumTokens)
+            .toString()
+
+          this.setParsedChunk(
+            type,
+            sourceEnumName,
+            resultEnumName,
+            scope
+          )
           break
         }
 

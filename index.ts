@@ -10,7 +10,7 @@ import path from 'node:path'
 
 function getNamespaceName(src: string, context: SerializeContext) {
 
-  const commonRe = /^common./
+  const commonRe = /^common\./
 
   let chunks: string[] = (
       commonRe.test(src)
@@ -29,12 +29,20 @@ function getNamespaceName(src: string, context: SerializeContext) {
   })
 }
 
+export function getTargetFilePath(value: string) {
+  return value
+    .replace(/^\.\//, '')
+    .replace(/\//g, '_')
+    .replace(/\.proto$/, '.d.ts')
+}
+
 Serialize.addMutationRule(MutatorType.VariableName, (value) => {
   return camelCase(value)
 })
 
 Serialize.addMutationRule(MutatorType.VariableType, (value, context) => {
   const map: Record<string, string> = {
+    'google.protobuf.Any': 'any',
     'google.protobuf.Empty': 'any',
     'google.protobuf.Timestamp': 'string',
     bool: 'boolean',
@@ -67,18 +75,18 @@ Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value, context) =
 })
 
 Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
-  return value
-    .replace(/\//g, '_')
-    .replace(/\.proto$/, '.d.ts')
+  return getTargetFilePath(value)
 })
+
+const file = 'proto/service/protocol/external.proto'
 
 try {
   const dts = new DtsFile({
     basePath: path.resolve(__dirname, './types/'),
-    dataSource: new DataSourceFile('./proto/service/auth/external.proto')
+    dataSource: new DataSourceFile(file)
   })
 
-  dts.write('auth_external.d.ts')
+  dts.write(getTargetFilePath(file))
 } catch (e) {
   console.log(e)
 }
