@@ -158,8 +158,7 @@ export class SerializeMessage extends Serialize {
           const tokens = [td]
             .concat(this.flatReadUntil(Token.SemicolonSymbol))
             .map((tokenData) => {
-
-              if (tokenData.token === Token.VariableType) {
+              if (tokenData.token === Token.VariableType || tokenData.token === Token.VariableTypeMapValue) {
                 let typename = this.findScopedTypeName(tokenData.content, scope)
 
                 if (typename) {
