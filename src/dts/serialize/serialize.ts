@@ -16,10 +16,14 @@ export type SerializeContext = {
 
 export abstract class Serialize extends TokensDataStack {
 
+  private scope: string[]
+
   constructor(
     private context: SerializeContext
   ) {
     super()
+
+    this.scope = []
   }
 
   static mutators: Record<MutatorType, MutationActions[]> = {
@@ -43,9 +47,19 @@ export abstract class Serialize extends TokensDataStack {
 
   }
 
-  public instance(ctor: SerializeConstructor, tokens: TokenData[]) {
-    return new ctor(this.context)
+  public instance<T extends SerializeConstructor>(ctor: T, tokens: TokenData[]): InstanceType<T> {
+    return (new ctor(this.context) as InstanceType<T>)
       .setTokens(tokens)
+  }
+
+  public setScope(scope: string[]) {
+    this.scope = scope
+
+    return this
+  }
+
+  public getScopedName(name: string) {
+    return [...this.scope, name].join('__')
   }
 
   public abstract toString(): string;

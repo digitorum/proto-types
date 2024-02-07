@@ -129,29 +129,16 @@ export class SerializeMessage extends Serialize {
         }
 
         case Token.Enum: {
-          let sourceEnumName = this.find(Token.EnumName)?.content ?? ''
-          let resultEnumName =  [...scope, sourceEnumName].join('__')
-
           const enumTokens = [td]
             .concat(this.flatReadUntil(Token.EnumBodyEnd))
-            .map((td) => {
-              if (td.token === Token.EnumName) {
-                return {
-                  token: td.token,
-                  content: resultEnumName
-                }
-              }
-
-              return td
-            })
 
           const type = this.instance(SerializeEnum, enumTokens)
-            .toString()
+            .setScope(scope)
 
           this.setParsedChunk(
-            type,
-            sourceEnumName,
-            resultEnumName,
+            type.toString(),
+            type.name,
+            type.scopedName,
             scope
           )
           break
