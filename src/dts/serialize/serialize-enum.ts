@@ -8,8 +8,8 @@ import { SerializeEnumElement } from './serialize-enum-element'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeEnum extends Serialize {
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
   }
 
   public toString() {

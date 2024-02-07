@@ -29,10 +29,8 @@ export class DtsFile extends TokensDataStack {
 
   constructor({
     basePath = './',
-    dataSource
   }: {
     basePath?: string;
-    dataSource: DataSource;
   }) {
     super()
 
@@ -42,10 +40,6 @@ export class DtsFile extends TokensDataStack {
     this.source = ''
     this.namespace = ''
     this.package = ''
-
-    this.tokens = new Lexer(dataSource).parse()
-
-    this.perform()
   }
 
   private get context(): SerializeContext {
@@ -53,13 +47,6 @@ export class DtsFile extends TokensDataStack {
       namespace: this.namespace,
       package: this.package
     }
-  }
-
-  private getSerializerInstance<T extends SerializeConstructor>(
-    ctor: T,
-    tokens: TokenData[]
-  ) {
-    return new ctor(tokens, this.context) as InstanceType<T>
   }
 
   private get formatted(): Promise<string> {
@@ -74,8 +61,25 @@ export class DtsFile extends TokensDataStack {
     return this.namespace
   }
 
-  public async write(filePath: string) {
-    fs.writeFileSync(path.resolve(this.basePath, filePath), await this.formatted)
+  public setDataSource(src: DataSource) {
+    const tokens = new Lexer(src).parse()
+
+    this.setTokens(tokens)
+    this.perform()
+
+    return this
+  }
+
+  public async write(file: string) {
+    fs.writeFileSync(path.resolve(this.basePath, file), await this.formatted)
+  }
+
+  private getSerializerInstance<T extends SerializeConstructor>(
+    ctor: T,
+    tokens: TokenData[]
+  ) {
+    return (new ctor(this.context) as InstanceType<T>)
+      .setTokens(tokens)
   }
 
   public perform() {
@@ -109,12 +113,11 @@ export class DtsFile extends TokensDataStack {
           const imprt = this.getSerializerInstance(SerializeImport, this.flatReadUntil(Token.SemicolonSymbol))
 
           if (imprt.dTsPath) {
-            const dtsFile = new DtsFile({
-              basePath: this.basePath,
-              dataSource: new DataSourceFile(imprt.path)
+            new DtsFile({
+              basePath: this.basePath
             })
-
-            dtsFile.write(imprt.dTsPath)
+            .setDataSource(new DataSourceFile(imprt.path))
+            .write(imprt.dTsPath)
 
             // this.imports.push(imprt.toImportString([dtsFile.ns]))
           }

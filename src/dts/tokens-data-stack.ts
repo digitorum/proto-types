@@ -6,8 +6,14 @@ import { Token } from '../parser/enum/token'
 export class TokensDataStack {
   protected tokens: TokenData[]
 
-  constructor(tokens: TokenData[] = []) {
+  constructor() {
+    this.tokens = []
+  }
+
+  public setTokens(tokens: TokenData[]) {
     this.tokens = tokens
+
+    return this
   }
 
   protected flatReadUntil(token: Token): TokenData[] {

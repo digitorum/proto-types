@@ -5,8 +5,8 @@ import { Serialize } from './serialize'
 import { SerializeVariableAssign } from './serialize-variable-assign'
 
 export class SerializeGlobalVar extends Serialize {
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
   }
 
   public toString() {

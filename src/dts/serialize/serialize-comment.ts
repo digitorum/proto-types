@@ -5,8 +5,8 @@ import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeComment extends Serialize {
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
   }
 
   public toString() {

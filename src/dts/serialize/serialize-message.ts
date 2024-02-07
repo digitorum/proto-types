@@ -18,16 +18,21 @@ export class SerializeMessage extends Serialize {
     scope: string[]
   }[]
 
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
 
     this.parsed = []
-
-    this.fill()
   }
 
   public get messages() {
     return this.parsed.map((node) => node.resultName)
+  }
+
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
+    this.fill()
+
+    return this
   }
 
   private setParsedChunk(

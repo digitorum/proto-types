@@ -6,7 +6,7 @@ import { TokensDataStack } from '../tokens-data-stack'
 type MutationActions = (content: string, context: SerializeContext) => string
 
 export type SerializeConstructor = {
-  new (tokens: TokenData[], context: SerializeContext): Serialize
+  new (context: SerializeContext): Serialize
 }
 
 export type SerializeContext = {
@@ -17,10 +17,9 @@ export type SerializeContext = {
 export abstract class Serialize extends TokensDataStack {
 
   constructor(
-    tokens: TokenData[],
     private context: SerializeContext
   ) {
-    super(tokens)
+    super()
   }
 
   static mutators: Record<MutatorType, MutationActions[]> = {
@@ -45,7 +44,8 @@ export abstract class Serialize extends TokensDataStack {
   }
 
   public instance(ctor: SerializeConstructor, tokens: TokenData[]) {
-    return new ctor(tokens, this.context)
+    return new ctor(this.context)
+      .setTokens(tokens)
   }
 
   public abstract toString(): string;

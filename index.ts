@@ -78,15 +78,19 @@ Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
   return getTargetFilePath(value)
 })
 
-const file = 'proto/service/protocol/external.proto'
+const files = [
+  'proto/service/protocol/external.proto',
+  'proto/service/protocol/internal.proto'
+]
 
-try {
-  const dts = new DtsFile({
-    basePath: path.resolve(__dirname, './types/'),
-    dataSource: new DataSourceFile(file)
-  })
-
-  dts.write(getTargetFilePath(file))
-} catch (e) {
-  console.log(e)
-}
+files.forEach((file) => {
+  try {
+    new DtsFile({
+      basePath: path.resolve(__dirname, './types/')
+    })
+    .setDataSource(new DataSourceFile(file))
+    .write(getTargetFilePath(file))
+  } catch (e) {
+    console.log(e)
+  }
+})

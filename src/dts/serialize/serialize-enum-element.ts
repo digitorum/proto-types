@@ -7,8 +7,8 @@ import { SerializeValue } from './serialize-value'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeEnumElement extends Serialize {
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
   }
 
   public get name() {

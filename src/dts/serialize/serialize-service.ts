@@ -7,8 +7,8 @@ import { SerializeServiceRpc } from './serialize-service-rpc'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeService extends Serialize {
-  constructor(tokens: TokenData[], context: SerializeContext) {
-    super(tokens, context)
+  constructor(context: SerializeContext) {
+    super(context)
   }
 
   public toString(): string {
