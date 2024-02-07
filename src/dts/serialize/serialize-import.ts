@@ -6,12 +6,20 @@ import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeImport extends Serialize {
+  private path: string
+
   constructor(context: SerializeContext) {
     super(context)
+
+    this.path = ''
   }
 
-  public get path(): string {
-    return this.find(Token.DoubleQuotedString)?.content ?? ''
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
+
+    this.path = this.find(Token.DoubleQuotedString)?.content ?? ''
+
+    return this
   }
 
   public get dTsPath(): string | null {

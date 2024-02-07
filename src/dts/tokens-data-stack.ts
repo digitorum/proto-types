@@ -70,6 +70,37 @@ export class TokensDataStack {
     return result
   }
 
+  protected findInnerBlock(open: Token, close: Token) {
+    let startIndex = 0
+    let counter = 0
+
+    for(let i = 0; i < this.tokens.length; ++i) {
+      const td = this.tokens[i]
+
+      if (td.token === open && i !== 0) {
+        if (!startIndex) {
+          startIndex = i
+        }
+
+        counter++
+      }
+
+      if (td.token === close) {
+        if (counter === 0) {
+          return null // такое может быть если закрыто неоткрытое.
+        }
+
+        counter--
+
+        if (counter === 0) {
+          return this.tokens.splice(startIndex, i - startIndex + 1)
+        }
+      }
+    }
+
+    return null
+  }
+
   protected flatFindBlock(open: Token, close: Token): TokenData[] | null {
     const startIndex = this.tokens.findIndex((td) => td.token === open)
     const endIndex = this.tokens.findIndex((td) => td.token === close)

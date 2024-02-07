@@ -10,9 +10,14 @@ export class SerializeServiceRpc extends Serialize {
     super(context)
   }
 
-  public get name() {
-    return this.find(Token.RpcName)?.content ?? ''
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
+    
+    this.name = this.find(Token.RpcName)?.content ?? ''
+
+    return this
   }
+
 
   public get argType() {
     return this.applyMutationRule(MutatorType.VariableType, this.find(Token.RpcInput)?.content ?? '')

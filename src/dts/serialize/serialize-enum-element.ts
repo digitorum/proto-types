@@ -7,24 +7,30 @@ import { SerializeValue } from './serialize-value'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeEnumElement extends Serialize {
+
+  private value: TokenData | null
+
   constructor(context: SerializeContext) {
     super(context)
+
+    this.value = null
   }
 
-  public get name() {
-    return this.find(Token.VariableName)
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
+
+    this.name = this.find(Token.VariableName)?.content ?? ''
+    this.value = this.findFirstOf([Token.Number, Token.DoubleQuotedString])
+
+    return this
   }
-  
-  public get value() {
-    return this.findFirstOf([Token.Number, Token.DoubleQuotedString])
-  }
-  
+
   public toString() {
     if (!this.name) {
       throw new NoTokenFound()
     }
 
-    let result: string = this.name.content
+    let result: string = this.name
 
     if (this.value) {
       result += ' = ' + this.instance(SerializeValue, [this.value]).toString()

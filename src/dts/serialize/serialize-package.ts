@@ -6,16 +6,21 @@ import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
 
 export class SerializePackage extends Serialize {
+  public namespace: string
+
   constructor(context: SerializeContext) {
     super(context)
+
+    this.namespace = ''
   }
 
-  public get name() {
-    return this.find(Token.PackageName)?.content ?? ''
-  }
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
 
-  public get namespace() {
-    return this.applyMutationRule(MutatorType.PackageNameToNamespace, this.name)
+    this.name = this.find(Token.PackageName)?.content ?? ''
+    this.namespace = this.applyMutationRule(MutatorType.PackageNameToNamespace, this.name)
+
+    return this
   }
 
   public toString() {

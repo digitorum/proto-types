@@ -1,4 +1,5 @@
 import type { SerializeContext } from './serialize'
+import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
@@ -8,16 +9,16 @@ import { Token } from '../../parser/enum/token'
 
 export class SerializeEnum extends Serialize {
 
-  public readonly name: string
-
   constructor(context: SerializeContext) {
     super(context)
-
-    this.name = this.find(Token.EnumName)?.content ?? ''
   }
 
-  public get scopedName() {
-    return this.getScopedName(this.name)
+  public setTokens(tokens: TokenData[]) {
+    Serialize.prototype.setTokens.call(this, tokens)
+
+    this.name = this.find(Token.EnumName)?.content ?? ''
+
+    return this
   }
 
   public toString() {

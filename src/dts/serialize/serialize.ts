@@ -15,15 +15,26 @@ export type SerializeContext = {
 }
 
 export abstract class Serialize extends TokensDataStack {
+  public name: string
 
-  private scope: string[]
+  protected parent: Serialize | null
+
+  private scoped: Serialize[]
 
   constructor(
     private context: SerializeContext
   ) {
     super()
 
-    this.scope = []
+    this.parent = null
+    this.name = ''
+    this.scoped = []
+  }
+
+  destructor() {
+    this.parent = null
+
+    this.scoped.forEach((scoped) => scoped.destructor())
   }
 
   static mutators: Record<MutatorType, MutationActions[]> = {
@@ -44,7 +55,6 @@ export abstract class Serialize extends TokensDataStack {
 
     return Serialize.mutators[type]
       .reduce<string>((acc, fn) => fn(acc, this.context), value)
-
   }
 
   public instance<T extends SerializeConstructor>(ctor: T, tokens: TokenData[]): InstanceType<T> {
@@ -52,14 +62,40 @@ export abstract class Serialize extends TokensDataStack {
       .setTokens(tokens)
   }
 
-  public setScope(scope: string[]) {
-    this.scope = scope
+  public get scopedName(): string {
+    if (this.parent && this.parent.name) {
+      return `${this.parent?.name}__${this.name}`
+    }
+
+    return this.name
+  }
+
+  public belongsTo(parent: Serialize) {
+    this.parent = parent
 
     return this
   }
 
-  public getScopedName(name: string) {
-    return [...this.scope, name].join('__')
+  public addToScope(inst: Serialize) {
+    this.scoped.push(inst.belongsTo(this))
+  }
+
+  public findNameInScope(name: string): string {
+    const inHere = this.scoped.filter((inst) => inst.name === name)
+
+    if (inHere.length === 0) {
+      if (this.parent) {
+        return this.parent.findNameInScope(name)
+      }
+    } else if (inHere.length === 1) {
+      return inHere[0].scopedName
+    }
+
+    return name
+  }
+
+  public applyToScope<R>(fn: (inst: Serialize) => R): R[] {
+    return this.scoped.map((node) => fn(node))
   }
 
   public abstract toString(): string;

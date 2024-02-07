@@ -1,4 +1,4 @@
-import type { SerializeContext } from './serialize'
+import type { SerializeConstructor, SerializeContext } from './serialize'
 import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { NoTokenFound } from '../error/no-token-found'
@@ -9,76 +9,55 @@ import { SerializeVariableOptionalType } from './serialize-variable-optional-typ
 import { SerializeVariableType } from './serialize-variable-type'
 import { Token } from '../../parser/enum/token'
 
-export class SerializeMessage extends Serialize {
+type EntityInScope = typeof SerializeMessage
+  | typeof SerializeEnum
 
-  private parsed: {
-    type: string;
-    sourceName: string;
-    resultName: string;
-    scope: string[]
-  }[]
+export class SerializeMessage extends Serialize {
+  public name: string = ''
 
   constructor(context: SerializeContext) {
     super(context)
 
-    this.parsed = []
-  }
-
-  public get messages() {
-    return this.parsed.map((node) => node.resultName)
+    this.name = ''
   }
 
   public setTokens(tokens: TokenData[]) {
     Serialize.prototype.setTokens.call(this, tokens)
-    this.fill()
+
+    this.name = this.find(Token.MessageName)?.content ?? ''
+
+    // найти все вложенные структуры (message и enum - именно в таком порядке)
+    // подготовить классы для сериализации без вызова оной
+    // сформировать ScopedTypeName
+    // сериализовать с применением ScopedTypeName
+
+    const stack: [EntityInScope, Token, Token][] = [
+      [SerializeMessage, Token.MessageStart, Token.MessageBodyEnd],
+      [SerializeEnum, Token.Enum, Token.EnumBodyEnd]
+    ]
+
+    stack
+      .forEach(([ctor, open, close]) => {
+        let innerEntity = null
+
+        do {
+          innerEntity = this.findInnerBlock(open, close)
+
+          if (innerEntity) {
+            this.addToScope(this.instance(ctor, innerEntity))
+          }
+
+        } while (innerEntity !== null)
+      })
 
     return this
   }
 
-  private setParsedChunk(
-    type: string,
-    sourceName: string,
-    resultName: string,
-    scope: string[]
-  ) {
-    this.parsed.push({
-      type,
-      sourceName,
-      resultName,
-      scope
-    })
-  }
-
-  private findScopedTypeName(sourceName: string, scope: string[]) {
-    return this.parsed
-      .filter((node) => {
-        // сразу отсекаем несовпадение по исходному типу
-        if (node.sourceName !== sourceName) {
-          return false
-        }
-
-        // нужно найти все совпадения по скопу
-        // ткущий тип лжит глубже по вложенности
-        if (node.scope.length < scope.length) {
-          return false
-        }
-
-        // Если не все ноды скопа соедржатся в элементе - пропускаем
-        if (scope.filter((ns) => node.scope.indexOf(ns) !== -1).length !== scope.length) {
-          return false
-        }
-
-        return true
-      })
-      .sort((a, b) => a.scope.length - b.scope.length)[0]?.resultName ?? null
-  }
-
-  private fill(scope: string[] = []) {
+  public toString() {
     let result: string = ''
-    let isMessaheStartMatched = false
     let isOneOfBlockStarted = false
-    let sourceInterfaceName = ''
-    let resultIntarfaceName = ''
+
+    result += this.applyToScope((node) => node.toString()).join('\n')
 
     do {
       const td = this.tokens.shift()
@@ -105,21 +84,12 @@ export class SerializeMessage extends Serialize {
         }
 
         case Token.MessageStart: {
-          if (isMessaheStartMatched) {
-            // уводим на второй виток перед этим вернув токен на место.
-            this.tokens.unshift(td)
-            this.fill([...scope, sourceInterfaceName])
-          } else {
-            isMessaheStartMatched = true
-            result += 'export interface '
-          }
+          result += 'export interface '
           break
         }
 
         case Token.MessageName: {
-          sourceInterfaceName = td.content
-          resultIntarfaceName = [...scope, td.content].join('__')
-          result += resultIntarfaceName
+          result += this.scopedName
           break
         }
 
@@ -128,19 +98,8 @@ export class SerializeMessage extends Serialize {
           break
         }
 
-        case Token.Enum: {
-          const enumTokens = [td]
-            .concat(this.flatReadUntil(Token.EnumBodyEnd))
-
-          const type = this.instance(SerializeEnum, enumTokens)
-            .setScope(scope)
-
-          this.setParsedChunk(
-            type.toString(),
-            type.name,
-            type.scopedName,
-            scope
-          )
+        case Token.MessageBodyEnd: {
+          result += '}\n'
           break
         }
 
@@ -151,7 +110,7 @@ export class SerializeMessage extends Serialize {
             .concat(this.flatReadUntil(Token.SemicolonSymbol))
             .map((tokenData) => {
               if (tokenData.token === Token.VariableType || tokenData.token === Token.VariableTypeMapValue) {
-                let typename = this.findScopedTypeName(tokenData.content, scope)
+                let typename = this.findNameInScope(tokenData.content)
 
                 if (typename) {
                   return {
@@ -175,23 +134,9 @@ export class SerializeMessage extends Serialize {
           result += `${typeDefinition.toString()};\n`
           break;
         }
-
-        case Token.MessageBodyEnd: {
-          result += '}\n'
-          // Сборка завершена
-          return this.setParsedChunk(
-            result,
-            sourceInterfaceName,
-            resultIntarfaceName,
-            scope
-          )
-        }
       }
     } while (this.tokens.length > 0)
-  }
 
-  public toString() {
-    return this.parsed
-      .map((chunk) => chunk.type).join('\n')
+    return result
   }
 }
