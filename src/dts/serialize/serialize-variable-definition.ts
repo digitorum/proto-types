@@ -3,24 +3,28 @@ import type { TokenData } from '../../parser/tokenize/tokenize'
 
 import { MutatorType } from '../enum/mutator-type'
 import { NoTokenFound } from '../error/no-token-found'
+import { Serialize } from './serialize'
 import { SerializeType } from './serialize-type'
-import { SerializeValue } from './serialize-value'
-import { SerializeVariableDefinition } from './serialize-variable-definition'
 import { Token } from '../../parser/enum/token'
 
-export class SerializeVariableAssign extends SerializeVariableDefinition {
-  private value: TokenData | null
+export class SerializeVariableDefinition extends Serialize {
+
+  protected type: TokenData[] | null
+  protected repeated: TokenData | null
 
   constructor(context: SerializeContext) {
     super(context)
 
-    this.value = null
+    this.type = null
+    this.repeated = null
   }
 
   public setTokens(tokens: TokenData[]) {
-    SerializeVariableDefinition.prototype.setTokens.call(this, tokens)
+    Serialize.prototype.setTokens.call(this, tokens)
 
-    this.value = this.findFirstOf([Token.Number, Token.DoubleQuotedString])
+    this.name = this.find(Token.VariableName)?.content ?? ''
+    this.type = this.flatFindBlock(Token.VariableTypeDefinitionStart, Token.VariableTypeDefinitionEnd)
+    this.repeated = this.find(Token.VariableRepeated)
 
     return this
   }
@@ -39,10 +43,6 @@ export class SerializeVariableAssign extends SerializeVariableDefinition {
 
     if (this.repeated) {
       result += '[]'
-    }
-
-    if (this.value) {
-      result += ' = ' + this.instance(SerializeValue, [this.value]).toString()
     }
 
     return result

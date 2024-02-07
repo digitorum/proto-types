@@ -5,8 +5,8 @@ import { NoTokenFound } from '../error/no-token-found'
 import { Serialize } from './serialize'
 import { SerializeComment } from './serialize-comment'
 import { SerializeEnum } from './serialize-enum'
-import { SerializeVariableOptionalType } from './serialize-variable-optional-type'
-import { SerializeVariableType } from './serialize-variable-type'
+import { SerializeVariableDefinitionOptional } from './serialize-variable-definition-optional'
+import { SerializeVariableDefinition } from './serialize-variable-definition'
 import { Token } from '../../parser/enum/token'
 
 type EntityInScope = typeof SerializeMessage
@@ -126,9 +126,9 @@ export class SerializeMessage extends Serialize {
           let typeDefinition: Serialize
 
           if (isOneOfBlockStarted) {
-            typeDefinition = this.instance(SerializeVariableOptionalType, tokens)
+            typeDefinition = this.instance(SerializeVariableDefinitionOptional, tokens)
           } else {
-            typeDefinition = this.instance(SerializeVariableType, tokens)
+            typeDefinition = this.instance(SerializeVariableDefinition, tokens)
           }
 
           result += `${typeDefinition.toString()};\n`
