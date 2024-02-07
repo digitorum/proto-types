@@ -8,6 +8,17 @@ import { Serialize } from './src/dts/serialize/serialize'
 import camelCase from 'lodash.camelcase'
 import path from 'node:path'
 
+function getFullType(pckg: string, src: string) {
+
+  if (src.match(/^(entity|service|struct|typed_value)/)) {
+    return src
+  }
+
+  const path = pckg.replace(new RegExp('\.' + src + '$', 'i'), '')
+
+  return `${path}.${src}`
+}
+
 function getNamespaceName(src: string, context: SerializeContext) {
 
   const commonRe = /^common\./
@@ -15,7 +26,7 @@ function getNamespaceName(src: string, context: SerializeContext) {
   let chunks: string[] = (
       commonRe.test(src)
         ? src // передан абсолютный путь
-        : `${context.package}.${src}` // передан относительный путь
+        : getFullType(context.package, src) // передан относительный путь
     )
     .replace(commonRe, '')
     .split('.')
@@ -80,7 +91,9 @@ Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
 
 const files = [
   'proto/service/protocol/external.proto',
-  'proto/service/protocol/internal.proto'
+  'proto/service/protocol/internal.proto',
+  'proto/service/pre_qualification/external.proto',
+  'proto/service/auth/external.proto'
 ]
 
 files.forEach((file) => {
