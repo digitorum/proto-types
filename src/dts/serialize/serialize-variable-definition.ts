@@ -38,7 +38,7 @@ export class SerializeVariableDefinition extends Serialize {
     let result: string = this.applyMutationRule(MutatorType.VariableName, this.name)
 
     if (this.type) {
-      result += `: ${this.instance(SerializeType, this.type).toString()}`
+      result += `: ${this.instance(SerializeType, this.type).belongsTo(this).toString()}`
     }
 
     if (this.repeated) {

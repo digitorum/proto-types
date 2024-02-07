@@ -58,6 +58,8 @@ export class SerializeMessage extends Serialize {
     let isOneOfBlockStarted = false
 
     result += this.applyToScope((node) => node.toString()).join('\n')
+    result += '\n'
+
 
     do {
       const td = this.tokens.shift()
@@ -108,20 +110,6 @@ export class SerializeMessage extends Serialize {
 
           const tokens = [td]
             .concat(this.flatReadUntil(Token.SemicolonSymbol))
-            .map((tokenData) => {
-              if (tokenData.token === Token.VariableType || tokenData.token === Token.VariableTypeMapValue) {
-                let typename = this.findNameInScope(tokenData.content)
-
-                if (typename) {
-                  return {
-                    token: tokenData.token,
-                    content: typename
-                  }
-                }
-              }
-
-              return tokenData
-            })
 
           let typeDefinition: Serialize
 
@@ -131,11 +119,19 @@ export class SerializeMessage extends Serialize {
             typeDefinition = this.instance(SerializeVariableDefinition, tokens)
           }
 
+          typeDefinition
+            .belongsTo(this)
+
           result += `${typeDefinition.toString()};\n`
+
           break;
         }
       }
     } while (this.tokens.length > 0)
+
+    if (this.parent === null) {
+      this.destructor()
+    }
 
     return result
   }
