@@ -7,7 +7,7 @@ const emptyCharacters = [
 
 export abstract class DataSource {
   public abstract get nextChar(): string;
-  public abstract get oef(): boolean;
+  public abstract get eof(): boolean;
   public abstract nextChars(count: number): string;
   public abstract readChar(): string;
   public abstract readChars(count: number): string;

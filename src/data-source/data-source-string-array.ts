@@ -7,7 +7,7 @@ export class DataSourceStringArray extends DataSource {
     super()
   }
 
-  public get oef(): boolean {
+  public get eof(): boolean {
     return this.source.length === 0
   }
 

@@ -21,7 +21,7 @@ export class TokenizeProtoFile extends Tokenize {
       // на каждый тик удаляем лишние пустые символы
       source.readEmptyCharacters()
 
-      if (source.oef) {
+      if (source.eof) {
         return result
       }
 
