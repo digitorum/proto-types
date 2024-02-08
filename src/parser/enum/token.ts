@@ -24,6 +24,7 @@ export enum Token {
   OpenBracketSymbol,
   Package,
   PackageName,
+  RpcBody,
   RpcBodyEnd,
   RpcBodyStart,
   RpcDefinitionEnd,

@@ -14,6 +14,7 @@ export class SerializeService extends Serialize {
   public toString(): string {
     let result: string[] = []
     let namespace: string = ''
+    let tempComments: TokenData[] = []
 
     TICK: do {
       const td = this.tokens.shift()
@@ -25,15 +26,33 @@ export class SerializeService extends Serialize {
         }
 
         case Token.RpcDefinitionStart: {
-          result.push(
-            this.instance(SerializeServiceRpc, [td].concat(this.flatReadUntil(Token.RpcDefinitionEnd))).toString()
-          )
+          const rpc = this.instance(SerializeServiceRpc, [td].concat(this.flatReadUntil(Token.RpcDefinitionEnd)))
+            .setComment(tempComments)
+            .toString()
+
+          tempComments = []
+
+          result.push(rpc)
+          result.push('\n')
           continue TICK
         }
 
         case Token.Comment:
         case Token.MultilineComment: {
-          result.push(this.instance(SerializeComment, [td]).toString())
+          tempComments = [td]
+
+          while(this.tokens[0].token === Token.Comment || this.tokens[0].token === Token.MultilineComment) {
+            const chunk = this.tokens.shift()
+
+            if (chunk) {
+              tempComments.push(chunk)
+            }
+          }
+
+          if (this.tokens[0].token !== Token.RpcDefinitionStart) {
+            result.push(this.instance(SerializeComment, tempComments).toString())
+            tempComments = []
+          }
           continue TICK
         }
 
@@ -44,7 +63,7 @@ export class SerializeService extends Serialize {
     return `
 
       export namespace ${namespace} {
-        ${result.join('\n\n')}
+        ${result.join('\n')}
       }
 
     `

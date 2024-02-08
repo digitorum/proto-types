@@ -1,6 +1,7 @@
 import type { TokenData } from './tokenize'
 
 import { DataSource } from '../../data-source/data-source'
+import { Token } from '../enum/token'
 import { Tokenize } from './tokenize'
 
 // Все что находится внутри нас не интересует, в типы это никак не пойдет, поэтому просто сливаем весь блок в никуда
@@ -10,7 +11,7 @@ export class TokenizeRpcBody extends Tokenize {
     super()
   }
 
-  public apply(source: DataSource) {
+  public apply(source: DataSource): TokenData[] {
     let count = 0
     let content: string = ''
 
@@ -41,6 +42,11 @@ export class TokenizeRpcBody extends Tokenize {
       content += source.readChar()
     }
 
-    return []
+    return [
+      {
+        token: Token.RpcBody,
+        content
+      }
+    ]
   }
 }

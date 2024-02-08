@@ -118,7 +118,8 @@ try {
       prettier.format(result.source, {
         "trailingComma": "none",
         "singleQuote": true,
-        "parser": "typescript"
+        "parser": "typescript",
+        "printWidth": 300
       }).then((content) => {
         fs.writeFileSync(path.resolve(__dirname, './types/', getTargetFilePath(file)), content)
       })
