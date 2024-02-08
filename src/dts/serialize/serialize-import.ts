@@ -6,7 +6,7 @@ import { Serialize } from './serialize'
 import { Token } from '../../parser/enum/token'
 
 export class SerializeImport extends Serialize {
-  private path: string
+  public path: string
 
   constructor(context: SerializeContext) {
     super(context)
@@ -22,21 +22,7 @@ export class SerializeImport extends Serialize {
     return this
   }
 
-  public get dTsPath(): string | null {
-
-    // Игнорируем все внутренние типы протобафа
-    if (this.path.match(/^google\/(protobuf|api)/)) {
-      return null
-    }
-
-    return this.applyMutationRule(MutatorType.ImportFilePath, this.path)
-  }
-
   public toString() {
     return `// ${this.find(Token.Import)?.content} "${this.path}"`
-  }
-
-  public toImportString(args: string[]) {
-    return `import { ${args.join(', ')} } from './${this.dTsPath}'`
   }
 }

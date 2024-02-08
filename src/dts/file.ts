@@ -1,12 +1,7 @@
 import type { SerializeContext, SerializeConstructor } from './serialize/serialize'
 import type { TokenData } from '../parser/tokenize/tokenize'
 
-import * as prettier from "prettier"
-import fs from 'node:fs'
-import path from 'node:path'
-
 import { DataSource } from '../data-source/data-source'
-import { DataSourceFile } from '../data-source/data-source-file'
 import { Lexer } from '../parser/lexer'
 import { SerializeComment } from './serialize/serialize-comment'
 import { SerializeEnum } from './serialize/serialize-enum'
@@ -19,24 +14,13 @@ import { Token } from '../parser/enum/token'
 import { TokensDataStack } from './tokens-data-stack'
 
 export class DtsFile extends TokensDataStack {
-
-  private basePath: string
-
   private namespace: string
   private package: string;
-  private imports: string[]
   private source: string
 
-  constructor({
-    basePath = './',
-  }: {
-    basePath?: string;
-  }) {
+  constructor() {
     super()
 
-    this.basePath = basePath
-
-    this.imports = []
     this.source = ''
     this.namespace = ''
     this.package = ''
@@ -49,29 +33,20 @@ export class DtsFile extends TokensDataStack {
     }
   }
 
-  private get formatted(): Promise<string> {
-    return prettier.format(this.source, {
-      "trailingComma": "none",
-      "singleQuote": true,
-      "parser": "typescript"
-    })
-  }
-
-  public get ns(): string {
-    return this.namespace
-  }
-
-  public setDataSource(src: DataSource) {
+  public parse(src: DataSource) {
     const tokens = new Lexer(src).parse()
 
     this.setTokens(tokens)
-    this.perform()
 
-    return this
-  }
+    const {
+      imports,
+      source
+    } = this.perform()
 
-  public async write(file: string) {
-    fs.writeFileSync(path.resolve(this.basePath, file), await this.formatted)
+    return {
+      imports,
+      source
+    }
   }
 
   private getSerializerInstance<T extends SerializeConstructor>(
@@ -83,6 +58,8 @@ export class DtsFile extends TokensDataStack {
   }
 
   public perform() {
+    let imports: string[] = []
+
     TICK: while(this.tokens.length) {
       switch(this.tokens[0].token) {
 
@@ -112,15 +89,7 @@ export class DtsFile extends TokensDataStack {
         case Token.Import: {
           const imprt = this.getSerializerInstance(SerializeImport, this.flatReadUntil(Token.SemicolonSymbol))
 
-          if (imprt.dTsPath) {
-            new DtsFile({
-              basePath: this.basePath
-            })
-            .setDataSource(new DataSourceFile(imprt.path))
-            .write(imprt.dTsPath)
-
-            // this.imports.push(imprt.toImportString([dtsFile.ns]))
-          }
+          imports.push(imprt.path)
 
           continue TICK
         }
@@ -163,16 +132,10 @@ export class DtsFile extends TokensDataStack {
       }
     }
 
-    const importsTmpl = this.imports
-      .join('\n')
-
-    this.source = `
-
-    ${importsTmpl}
-
-    namespace ${this.namespace} { ${this.source} }
-
-    `
+    return {
+      imports,
+      source: `namespace ${this.namespace} { ${this.source} }`
+    }
   }
 
 }

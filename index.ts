@@ -1,12 +1,17 @@
 import type { SerializeContext } from './src/dts/serialize/serialize'
 
-import { DataSourceFile } from './src/data-source/data-source-file'
+import { DataSourceGitlab } from './src/data-source/data-source-gitlab'
 import { DtsFile } from './src/dts/file'
 import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
 
 import camelCase from 'lodash.camelcase'
+import dotenv from 'dotenv'
+import fs from 'node:fs'
 import path from 'node:path'
+import * as prettier from "prettier"
+
+dotenv.config()
 
 function getFullType(pckg: string, src: string) {
 
@@ -85,25 +90,55 @@ Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value, context) =
   return getNamespaceName(value, context)
 })
 
-Serialize.addMutationRule(MutatorType.ImportFilePath, (value) => {
-  return getTargetFilePath(value)
-})
-
-const files = [
+let files = [
   'proto/service/protocol/external.proto',
   'proto/service/protocol/internal.proto',
   'proto/service/pre_qualification/external.proto',
   'proto/service/auth/external.proto'
 ]
 
-files.forEach((file) => {
-  try {
-    new DtsFile({
-      basePath: path.resolve(__dirname, './types/')
+let done: string[] = []
+
+try {
+  while (files.length) {
+    const file = files.shift()
+  
+    if (!file) {
+      break
+    }
+
+    console.log(`processing: ${file}`)
+  
+    const dts = new DtsFile()
+    const result = dts.parse(new DataSourceGitlab(file))
+  
+    if (result.source) {
+      done.push(file)
+
+      prettier.format(result.source, {
+        "trailingComma": "none",
+        "singleQuote": true,
+        "parser": "typescript"
+      }).then((content) => {
+        fs.writeFileSync(path.resolve(__dirname, './types/', getTargetFilePath(file)), content)
+      })
+    }
+
+    result.imports.forEach((path) => {
+      if (done.indexOf(path) !== -1) {
+        console.log(`skip as processed: ${path}`)
+        return
+      }
+
+      if (path.match(/^google\/(protobuf|api)/)) {
+        console.log(`skip as internal proto file: ${path}`)
+        return
+      }
+
+      files.push(path)
     })
-    .setDataSource(new DataSourceFile(file))
-    .write(getTargetFilePath(file))
-  } catch (e) {
-    console.log(e)
   }
-})
+} catch (e) {
+  console.log(e)
+}
+
