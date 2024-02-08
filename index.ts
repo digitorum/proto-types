@@ -6,6 +6,7 @@ import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
 
 import camelCase from 'lodash.camelcase'
+import colors from 'cli-color'
 import dotenv from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -107,8 +108,8 @@ try {
       break
     }
 
-    console.log(`processing: ${file}`)
-  
+    console.log(colors.white(`[process]: ${file}`))
+
     const dts = new DtsFile()
     const result = dts.parse(new DataSourceGitlabFile(file))
   
@@ -126,13 +127,19 @@ try {
     }
 
     result.imports.forEach((path) => {
+
       if (done.indexOf(path) !== -1) {
-        console.log(`skip as processed: ${path}`)
+        console.log(colors.green(`[double]: ${path}`))
+        return
+      }
+
+      if (files.indexOf(path) !== -1) {
+        console.log(colors.yellow(`[waiting]: ${path}`))
         return
       }
 
       if (path.match(/^google\/(protobuf|api)/)) {
-        console.log(`skip as internal proto file: ${path}`)
+        console.log(colors.red(`[skip]: ${path}`))
         return
       }
 
