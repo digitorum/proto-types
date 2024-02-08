@@ -16,12 +16,10 @@ import { TokensDataStack } from './tokens-data-stack'
 export class DtsFile extends TokensDataStack {
   private namespace: string
   private package: string;
-  private source: string
 
   constructor() {
     super()
 
-    this.source = ''
     this.namespace = ''
     this.package = ''
   }
@@ -59,13 +57,14 @@ export class DtsFile extends TokensDataStack {
 
   public perform() {
     let imports: string[] = []
+    let source: string = ''
 
     TICK: while(this.tokens.length) {
       switch(this.tokens[0].token) {
 
         case Token.VariableName: {
-          this.source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          source += '\n'
           continue TICK
         }
   
@@ -75,14 +74,14 @@ export class DtsFile extends TokensDataStack {
           this.namespace = pckg.namespace
           this.package = pckg.name
 
-          this.source += pckg.toString()
-          this.source += '\n'
+          source += pckg.toString()
+          source += '\n'
           continue TICK
         }
 
         case Token.VariableTypeDefinitionStart: {
-          this.source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeGlobalVar, this.flatReadUntil(Token.SemicolonSymbol)).toString()
+          source += '\n'
           continue TICK
         }
 
@@ -95,34 +94,34 @@ export class DtsFile extends TokensDataStack {
         }
 
         case Token.Comment: {
-          this.source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.Comment)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.Comment)).toString()
+          source += '\n'
           continue TICK
         }
 
         case Token.MultilineComment: {
-          this.source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.MultilineComment)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeComment, this.flatReadUntil(Token.MultilineComment)).toString()
+          source += '\n'
           continue TICK
         }
 
         case Token.MessageStart: {
           const message = this.getSerializerInstance(SerializeMessage, this.blockRead(Token.MessageStart, Token.MessageBodyEnd))
 
-          this.source += message.toString()
-          this.source += '\n'
+          source += message.toString()
+          source += '\n'
           continue TICK
         }
 
         case Token.Enum: {
-          this.source += this.getSerializerInstance(SerializeEnum, this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeEnum, this.blockRead(Token.Enum, Token.EnumBodyEnd)).toString()
+          source += '\n'
           continue TICK
         }
 
         case Token.ServiceDefinitionStart: {
-          this.source += this.getSerializerInstance(SerializeService, this.flatReadUntil(Token.ServiceDefinitionEnd)).toString()
-          this.source += '\n'
+          source += this.getSerializerInstance(SerializeService, this.flatReadUntil(Token.ServiceDefinitionEnd)).toString()
+          source += '\n'
           continue TICK
         }
 
@@ -134,7 +133,7 @@ export class DtsFile extends TokensDataStack {
 
     return {
       imports,
-      source: `namespace ${this.namespace} { ${this.source} }`
+      source: `namespace ${this.namespace} { ${source} }`
     }
   }
 
