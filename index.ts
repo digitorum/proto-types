@@ -2,19 +2,19 @@ import type { SerializeContext } from './src/dts/serialize/serialize'
 
 import { DataSourceGitlabFile } from './src/data-source/data-source-gitlab-file'
 import { DtsFile } from './src/dts/file'
+import { log } from './src/utils/log'
 import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
 
 import camelCase from 'lodash.camelcase'
-import colors from 'cli-color'
 import dotenv from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
-import * as prettier from "prettier"
+import * as prettier from 'prettier'
 
 dotenv.config()
 
-function getFullType(pckg: string, src: string) {
+function getAbsolutePackagePath(pckg: string, src: string) {
 
   if (src.match(/^(entity|service|struct|typed_value)/)) {
     return src
@@ -25,28 +25,27 @@ function getFullType(pckg: string, src: string) {
   return `${path}.${src}`
 }
 
-function getNamespaceName(src: string, context: SerializeContext) {
+function getNamespaceNameFromPackagePath(src: string, context: SerializeContext) {
 
   const commonRe = /^common\./
 
   let chunks: string[] = (
       commonRe.test(src)
         ? src // передан абсолютный путь
-        : getFullType(context.package, src) // передан относительный путь
+        : getAbsolutePackagePath(context.package, src) // передан относительный путь
     )
     .replace(commonRe, '')
     .split('.')
 
   return camelCase(
     chunks
-      .filter((node) => node !== 'common')
       .join('_')
   ).replace(/^(.)(.*)$/, ($0, $1, $2) => {
     return `${$1.toUpperCase()}${$2}`
   })
 }
 
-export function getTargetFilePath(value: string) {
+function getTargetFilePath(value: string) {
   return value
     .replace(/^\.\//, '')
     .replace(/\//g, '_')
@@ -77,7 +76,7 @@ Serialize.addMutationRule(MutatorType.VariableType, (value, context) => {
 
     if (chunks.length > 1) {
       const type = chunks.pop()
-      const ns = getNamespaceName(chunks.join('.'), context)
+      const ns = getNamespaceNameFromPackagePath(chunks.join('.'), context)
 
       return `${ns}.${type}`
     }
@@ -88,7 +87,7 @@ Serialize.addMutationRule(MutatorType.VariableType, (value, context) => {
 })
 
 Serialize.addMutationRule(MutatorType.PackageNameToNamespace, (value, context) => {
-  return getNamespaceName(value, context)
+  return getNamespaceNameFromPackagePath(value, context)
 })
 
 let files = [
@@ -100,19 +99,17 @@ let files = [
 
 let done: string[] = []
 
-try {
-  while (files.length) {
-    const file = files.shift()
-  
-    if (!file) {
-      break
-    }
+while (files.length) {
+  const file = files.shift()
 
-    console.log(colors.white(`[process]: ${file}`))
+  if (!file) {
+    break
+  }
 
+  try {
     const dts = new DtsFile()
     const result = dts.parse(new DataSourceGitlabFile(file))
-  
+
     if (result.source) {
       done.push(file)
 
@@ -126,27 +123,33 @@ try {
       })
     }
 
-    result.imports.forEach((path) => {
+    result.imports
+      .forEach((path) => {
 
-      if (done.indexOf(path) !== -1) {
-        console.log(colors.green(`[double]: ${path}`))
-        return
-      }
+        if (done.indexOf(path) !== -1) {
+          return log('double', path)
+        }
 
-      if (files.indexOf(path) !== -1) {
-        console.log(colors.yellow(`[waiting]: ${path}`))
-        return
-      }
+        if (files.indexOf(path) !== -1) {
+          return log('waiting', path)
+        }
 
-      if (path.match(/^google\/(protobuf|api)/)) {
-        console.log(colors.red(`[skip]: ${path}`))
-        return
-      }
+        if (path.match(/^google\/(protobuf|api)/)) {
+          return log('skip', path)
+        }
 
-      files.push(path)
-    })
+        files.push(path)
+      })
+
+    log('parsed', file)
+
+  } catch (error) {
+
+    log('error', file)
+
+    if (error instanceof Error) {
+      log('info', error.message)
+    }
+
   }
-} catch (e) {
-  console.log(e)
 }
-
