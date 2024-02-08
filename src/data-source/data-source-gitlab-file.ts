@@ -2,7 +2,7 @@ import { DataSourceStringArray } from './data-source-string-array'
 
 import { spawnSync } from 'node:child_process'
 
-export class DataSourceGitlab extends DataSourceStringArray {
+export class DataSourceGitlabFile extends DataSourceStringArray {
   constructor(path: string) {
     const token = process.env['GITLAB-PRIVATE-TOKEN']
     const origin = process.env['GITLAB-ORIGIN']

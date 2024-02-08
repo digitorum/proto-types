@@ -1,6 +1,6 @@
 import type { SerializeContext } from './src/dts/serialize/serialize'
 
-import { DataSourceGitlab } from './src/data-source/data-source-gitlab'
+import { DataSourceGitlabFile } from './src/data-source/data-source-gitlab-file'
 import { DtsFile } from './src/dts/file'
 import { MutatorType } from './src/dts/enum/mutator-type'
 import { Serialize } from './src/dts/serialize/serialize'
@@ -110,7 +110,7 @@ try {
     console.log(`processing: ${file}`)
   
     const dts = new DtsFile()
-    const result = dts.parse(new DataSourceGitlab(file))
+    const result = dts.parse(new DataSourceGitlabFile(file))
   
     if (result.source) {
       done.push(file)
