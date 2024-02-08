@@ -62,8 +62,8 @@ export abstract class Serialize extends TokensDataStack {
   }
 
   public get scopedName(): string {
-    if (this.parent && this.parent.name) {
-      return `${this.parent?.name}__${this.name}`
+    if (this.parent && this.parent.scopedName) {
+      return `${this.parent.scopedName}__${this.name}`
     }
 
     return this.name

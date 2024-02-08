@@ -27,9 +27,7 @@ export class SerializeMessage extends Serialize {
     this.name = this.find(Token.MessageName)?.content ?? ''
 
     // найти все вложенные структуры (message и enum - именно в таком порядке)
-    // подготовить классы для сериализации без вызова оной
-    // сформировать ScopedTypeName
-    // сериализовать с применением ScopedTypeName
+    // подготовить классы со связями для сериализации
 
     const stack: [EntityInScope, Token, Token][] = [
       [SerializeMessage, Token.MessageStart, Token.MessageBodyEnd],
