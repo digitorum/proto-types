@@ -6,7 +6,8 @@ export class DataSourceGitlabFile extends DataSourceStringArray {
   constructor(path: string) {
     const token = process.env['GITLAB-PRIVATE-TOKEN']
     const origin = process.env['GITLAB-ORIGIN']
-    const result = spawnSync('curl', ['--connect-timeout', '5', '--header', `PRIVATE-TOKEN: ${token}`, `${origin}/api/v4/projects/609/repository/files/${encodeURIComponent(path)}/raw`])
+    const id = process.env['GITLAB-PROJECT-ID']
+    const result = spawnSync('curl', ['--connect-timeout', '5', '--header', `PRIVATE-TOKEN: ${token}`, `${origin}/api/v4/projects/${id}/repository/files/${encodeURIComponent(path)}/raw`])
 
     let arr: string[] = []
 

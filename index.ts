@@ -27,7 +27,7 @@ function getAbsolutePackagePath(pckg: string, src: string) {
 
 function getNamespaceNameFromPackagePath(src: string, context: SerializeContext) {
 
-  const commonRe = /^common\./
+  const commonRe = /^(\.)?common\./
 
   let chunks: string[] = (
       commonRe.test(src)
@@ -94,7 +94,8 @@ let files = [
   'proto/service/protocol/external.proto',
   'proto/service/protocol/internal.proto',
   'proto/service/pre_qualification/external.proto',
-  'proto/service/auth/external.proto'
+  'proto/service/auth/external.proto',
+  'proto/service/complaint/external.proto'
 ]
 
 let done: string[] = []
